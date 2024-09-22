@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074076263856",
+    "project_id": "problem-solver-6482b",
+    "storage_bucket": "problem-solver-6482b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074076263856:android:4cada55e9fe22b9f322275",
+        "android_client_info": {
+          "package_name": "com.denizozaltay.problemsolver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcwqcy1V8CJqxdJg42R4xk7daPgiSTdqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
