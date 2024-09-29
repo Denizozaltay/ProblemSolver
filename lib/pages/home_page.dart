@@ -18,7 +18,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   void signOut() {
     final authService = Provider.of<AuthService>(context, listen: false);
-
     authService.signOut();
   }
 
@@ -39,30 +38,30 @@ class _HomePageState extends State<HomePage> {
 
       final image = await ImagePicker().pickImage(source: ImageSource.camera);
       if (image == null) {
-        print('Resim seçilmedi');
+        print('No image selected');
         return;
       }
 
       final question = await openAIService.getPromptFromImageFile(image);
       if (question == null) {
-        print('Resimden soru oluşturulamadı');
+        print('Failed to generate question from image');
         return;
       }
 
       final answer = await openAIService.getQuestionAnswer(question);
       if (answer == null) {
-        print('Soru için cevap alınamadı');
+        print('Failed to get answer for the question');
         return;
       }
 
       final questionId =
           await questionService.createQuestions(question, answer);
       if (questionId == null) {
-        print('Soru ID\'si oluşturulamadı');
+        print('Failed to create question ID');
         return;
       }
     } catch (e) {
-      print('Bir hata oluştu: $e');
+      print('An error occurred: $e');
     } finally {
       Navigator.pop(context);
     }
@@ -71,18 +70,60 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Home Page"),
-        actions: [
-          IconButton(
-            onPressed: signOut,
-            icon: const Icon(Icons.logout),
+      // Arka plan gradient
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF141E30), Color(0xFF243B55)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          IconButton(
-              onPressed: createChatWithImage, icon: const Icon(Icons.add)),
-        ],
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Üst kısım (AppBar yerine özel bir widget)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Home',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: createChatWithImage,
+                          icon: const Icon(Icons.add_a_photo),
+                          color: Colors.white,
+                        ),
+                        IconButton(
+                          onPressed: signOut,
+                          icon: const Icon(Icons.logout),
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Soru listesi
+              Expanded(
+                child: _buildQuestionList(),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: _buildQuestionList(),
     );
   }
 
@@ -94,17 +135,37 @@ class _HomePageState extends State<HomePage> {
           .collection('users')
           .doc(userID)
           .collection('questions')
+          .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Text("Bir hata oluştu");
+          return const Center(
+            child: Text(
+              "An error occurred",
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Yükleniyor...");
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.yellowAccent),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(
+            child: Text(
+              "No questions found",
+              style: TextStyle(color: Colors.white70),
+            ),
+          );
         }
 
         return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           children: snapshot.data!.docs
               .map<Widget>((doc) => _buildQuestionListItem(doc))
               .toList(),
@@ -117,9 +178,7 @@ class _HomePageState extends State<HomePage> {
     Timestamp timestamp = document['timestamp'] as Timestamp;
     DateTime dateTime = timestamp.toDate();
 
-    return ListTile(
-      title: Text(document.id),
-      subtitle: Text(dateTime.toString()),
+    return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
@@ -128,6 +187,39 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.question_answer,
+              color: Colors.yellowAccent,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                "Question ID: ${document.id}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            Text(
+              "${dateTime.day}/${dateTime.month}/${dateTime.year}",
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
