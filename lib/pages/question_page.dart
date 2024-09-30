@@ -17,7 +17,6 @@ class _QuestionPageState extends State<QuestionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Arka plan gradient
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -31,7 +30,6 @@ class _QuestionPageState extends State<QuestionPage> {
         child: SafeArea(
           child: Column(
             children: [
-              // Özel üst kısım
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20.0, vertical: 10.0),
@@ -60,7 +58,6 @@ class _QuestionPageState extends State<QuestionPage> {
                   ],
                 ),
               ),
-              // Soru ve cevap bölümü
               Expanded(
                 child: _buildQuestionInfo(),
               ),
@@ -95,7 +92,6 @@ class _QuestionPageState extends State<QuestionPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Soru Başlığı
                 const Text(
                   "Question:",
                   style: TextStyle(
@@ -105,7 +101,6 @@ class _QuestionPageState extends State<QuestionPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Soru Metni
                 Text(
                   snapshot.data.question,
                   style: const TextStyle(
@@ -114,7 +109,6 @@ class _QuestionPageState extends State<QuestionPage> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                // Cevap Başlığı
                 const Text(
                   "Answer:",
                   style: TextStyle(
@@ -124,7 +118,6 @@ class _QuestionPageState extends State<QuestionPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Cevap Metni
                 Text(
                   snapshot.data.answer,
                   style: const TextStyle(

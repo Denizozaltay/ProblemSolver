@@ -16,12 +16,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  void signOut() {
+  final OpenAIService openAIService = OpenAIService();
+  final QuestionService questionService = QuestionService();
+
+  void _signOut() {
     final authService = Provider.of<AuthService>(context, listen: false);
     authService.signOut();
   }
 
-  Future<void> createChatWithImage() async {
+  Future<void> _createChatWithImage() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -33,9 +36,6 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
-      final openAIService = OpenAIService();
-      final questionService = QuestionService();
-
       final image = await ImagePicker().pickImage(source: ImageSource.camera);
       if (image == null) {
         print('No image selected');
@@ -69,14 +69,114 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('An error occurred: $e');
     } finally {
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  Future<void> _deleteQuestion(String questionId) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 40.0),
+          padding: const EdgeInsets.all(20.0),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Delete Question',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Are you sure you want to delete this question?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24.0, vertical: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24.0, vertical: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await questionService.deleteQuestion(questionId);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Question deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete question: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Arka plan gradient
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -90,7 +190,6 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              // Üst kısım (AppBar yerine özel bir widget)
               Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20.0, vertical: 10.0),
@@ -108,12 +207,12 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: createChatWithImage,
+                          onPressed: _createChatWithImage,
                           icon: const Icon(Icons.add_a_photo),
                           color: Colors.white,
                         ),
                         IconButton(
-                          onPressed: signOut,
+                          onPressed: _signOut,
                           icon: const Icon(Icons.logout),
                           color: Colors.white,
                         ),
@@ -122,7 +221,6 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              // Soru listesi
               Expanded(
                 child: _buildQuestionList(),
               ),
@@ -189,8 +287,10 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                QuestionPage(questionId: document.id, title: document['title']),
+            builder: (context) => QuestionPage(
+              questionId: document.id,
+              title: document['title'],
+            ),
           ),
         );
       },
@@ -202,40 +302,29 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(15),
           ),
           elevation: 5,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Başlık
-                Text(
-                  document['title'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Tarih ve Saat
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${dateTime.day}/${dateTime.month}/${dateTime.year}",
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white70,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ],
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16.0),
+            title: Text(
+              document['title'],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              "${dateTime.day}/${dateTime.month}/${dateTime.year}",
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            trailing: IconButton(
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.redAccent,
+              ),
+              onPressed: () => _deleteQuestion(document.id),
             ),
           ),
         ),

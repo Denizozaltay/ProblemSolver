@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
       await authService.signInWithEmailAndPassword(
           emailController.text, passwordController.text);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
@@ -35,7 +36,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Gradient arka plan
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -51,10 +51,9 @@ class _LoginPageState extends State<LoginPage> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Fazla boşlukları önler
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 30),
-                  // Uygulama Adı
                   const Text(
                     'Problem Solver',
                     style: TextStyle(
@@ -65,14 +64,12 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Uygulama İkonu
                   const Icon(
                     Icons.lightbulb_outline,
                     size: 100,
                     color: Colors.yellowAccent,
                   ),
                   const SizedBox(height: 30),
-                  // Hoş Geldiniz Metni
                   const Text(
                     "Welcome back, you've been missed!",
                     textAlign: TextAlign.center,
@@ -82,40 +79,20 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  // E-posta Giriş Alanı
                   MyTextField(
                     controller: emailController,
                     hintText: "Email",
                     obscureText: false,
                   ),
                   const SizedBox(height: 20),
-                  // Şifre Giriş Alanı
                   MyTextField(
                     controller: passwordController,
                     hintText: "Password",
                     obscureText: true,
                   ),
-                  const SizedBox(height: 10),
-                  // Şifremi Unuttum
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // Forgot password functionality
-                      },
-                      child: const Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Giriş Yap Butonu
+                  const SizedBox(height: 30),
                   MyButton(onTap: signIn, text: "Sign In"),
                   const SizedBox(height: 30),
-                  // Kayıt Ol Metni
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

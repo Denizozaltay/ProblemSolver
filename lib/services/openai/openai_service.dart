@@ -26,7 +26,7 @@ class OpenAIService {
         {
           "role": "system",
           "content":
-              "You are a prompt generator. Your task is to convert question images sent to you into plain text, based solely on the language in which the question is written. Only transcribe the question itself without adding any additional information, and please avoid using special characters. Do not include the question number."
+              "You are a prompt generator tasked with converting question images into plain text, preserving the original language of each question. Transcribe only the question content without adding any additional information, avoiding the use of special characters, and excluding question numbers. If you encounter a visual question, extract the textual content from the image and include it in the transcription. If the image contains non-textual information, provide a clear and concise description of the visual elements as part of the question."
         },
         {
           'role': 'user',

@@ -32,6 +32,21 @@ class QuestionService {
     }
   }
 
+  Future<void> deleteQuestion(String questionId) async {
+    final String userID = _firebaseAuth.currentUser!.uid;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userID)
+          .collection('questions')
+          .doc(questionId)
+          .delete();
+    } catch (e) {
+      print('Error deleting question: $e');
+    }
+  }
+
   Future<Question> getQuestion(String questionId) async {
     final String userID = _firebaseAuth.currentUser!.uid;
 
