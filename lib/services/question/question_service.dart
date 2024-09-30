@@ -6,12 +6,14 @@ class QuestionService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String?> createQuestions(String question, String answer) async {
+  Future<String?> createQuestions(
+      String title, String question, String answer) async {
     try {
       final String userID = _firebaseAuth.currentUser!.uid;
       final Timestamp timestamp = Timestamp.now();
 
       Question newQuestion = Question(
+        title: title,
         question: question,
         answer: answer,
         timestamp: timestamp,

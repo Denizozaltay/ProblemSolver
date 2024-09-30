@@ -48,6 +48,12 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      final title = await openAIService.getTitleFromImageFile(image);
+      if (title == null) {
+        print('Failed to generate title from image');
+        return;
+      }
+
       final answer = await openAIService.getQuestionAnswer(question);
       if (answer == null) {
         print('Failed to get answer for the question');
@@ -55,7 +61,7 @@ class _HomePageState extends State<HomePage> {
       }
 
       final questionId =
-          await questionService.createQuestions(question, answer);
+          await questionService.createQuestions(title, question, answer);
       if (questionId == null) {
         print('Failed to create question ID');
         return;
@@ -92,7 +98,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Home',
+                      'Question List',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -183,41 +189,55 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => QuestionPage(questionId: document.id),
+            builder: (context) =>
+                QuestionPage(questionId: document.id, title: document['title']),
           ),
         );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
+        child: Card(
           color: Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.question_answer,
-              color: Colors.yellowAccent,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                "Question ID: ${document.id}",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          elevation: 5,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık
+                Text(
+                  document['title'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                // Tarih ve Saat
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "${dateTime.day}/${dateTime.month}/${dateTime.year}",
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white70,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ],
             ),
-            Text(
-              "${dateTime.day}/${dateTime.month}/${dateTime.year}",
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

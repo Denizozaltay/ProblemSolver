@@ -3,7 +3,9 @@ import 'package:problem_solver/services/question/question_service.dart';
 
 class QuestionPage extends StatefulWidget {
   final String questionId;
-  const QuestionPage({super.key, required this.questionId});
+  final String title;
+  const QuestionPage(
+      {super.key, required this.questionId, required this.title});
 
   @override
   State<QuestionPage> createState() => _QuestionPageState();
@@ -46,7 +48,7 @@ class _QuestionPageState extends State<QuestionPage> {
                     const SizedBox(width: 20),
                     Expanded(
                       child: Text(
-                        "Question ID: ${widget.questionId}",
+                        widget.title,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
