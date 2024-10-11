@@ -38,36 +38,63 @@ class _HomePageState extends State<HomePage> {
     try {
       final image = await ImagePicker().pickImage(source: ImageSource.camera);
       if (image == null) {
-        print('No image selected');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No image selected')),
+          );
+        }
         return;
       }
 
       final question = await openAIService.getPromptFromImageFile(image);
       if (question == null) {
-        print('Failed to generate question from image');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Failed to generate question from image')),
+          );
+        }
         return;
       }
 
       final title = await openAIService.getTitleFromImageFile(image);
       if (title == null) {
-        print('Failed to generate title from image');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Failed to generate title from image')),
+          );
+        }
         return;
       }
 
       final answer = await openAIService.getQuestionAnswer(question);
       if (answer == null) {
-        print('Failed to get answer for the question');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Failed to get answer for the question')),
+          );
+        }
         return;
       }
 
       final questionId =
           await questionService.createQuestions(title, question, answer);
       if (questionId == null) {
-        print('Failed to create question ID');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to create question ID')),
+          );
+        }
         return;
       }
     } catch (e) {
-      print('An error occurred: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         Navigator.pop(context);
