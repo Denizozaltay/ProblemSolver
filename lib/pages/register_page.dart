@@ -13,6 +13,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -25,21 +26,39 @@ class _RegisterPageState extends State<RegisterPage> {
           backgroundColor: Colors.redAccent,
         ),
       );
-    } else {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      return;
+    }
 
-      try {
-        await authService.signUpWithEmailAndPassword(
-            emailController.text, passwordController.text);
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
+    final username = usernameController.text.trim();
+    final usernameRegExp = RegExp(r'^[a-zA-Z0-9_]{3,15}$');
+
+    if (!usernameRegExp.hasMatch(username)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              "Invalid username. Usernames can only contain letters, numbers, and underscores, and be between 3 and 15 characters."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    try {
+      await authService.signUpWithEmailAndPassword(
+        username,
+        emailController.text,
+        passwordController.text,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -89,6 +108,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   const SizedBox(height: 30),
+                  MyTextField(
+                    controller: usernameController,
+                    hintText: "Username",
+                    obscureText: false,
+                  ),
+                  const SizedBox(height: 20),
                   MyTextField(
                     controller: emailController,
                     hintText: "Email",

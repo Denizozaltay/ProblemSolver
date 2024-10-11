@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:problem_solver/pages/question_page.dart';
 import 'package:problem_solver/services/auth/auth_service.dart';
-import 'package:problem_solver/services/question/question_service.dart';
 import 'package:problem_solver/services/openai/openai_service.dart';
+import 'package:problem_solver/services/question/question_service.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,23 +18,44 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final OpenAIService openAIService = OpenAIService();
   final QuestionService questionService = QuestionService();
+  String? _username;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsername();
+  }
+
+  Future<void> _fetchUsername() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      setState(() {
+        _username = userDoc['username'];
+      });
+    } catch (e) {
+      // Handle errors if necessary
+    }
+  }
 
   void _signOut() {
     final authService = Provider.of<AuthService>(context, listen: false);
     authService.signOut();
   }
 
-  Future<void> _createChatWithImage() async {
+  void _showLoadingDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
+        return const Center(child: CircularProgressIndicator());
       },
     );
+  }
 
+  Future<void> _createChatWithImage() async {
+    _showLoadingDialog();
     try {
       final image = await ImagePicker().pickImage(source: ImageSource.camera);
       if (image == null) {
@@ -96,14 +117,14 @@ class _HomePageState extends State<HomePage> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
     }
   }
 
-  Future<void> _deleteQuestion(String questionId) async {
-    bool? confirm = await showDialog(
+  Future<bool?> _showDeleteConfirmationDialog() {
+    return showDialog<bool>(
       context: context,
       builder: (context) => Center(
         child: Container(
@@ -177,11 +198,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteQuestion(String questionId) async {
+    bool? confirm = await _showDeleteConfirmationDialog();
 
     if (confirm == true) {
       try {
         await questionService.deleteQuestion(questionId);
-
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -201,12 +225,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF141E30), Color(0xFF243B55)],
@@ -217,39 +238,29 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Question List',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+              ListTile(
+                title: _username != null
+                    ? Text(
+                        _username!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : const CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.yellowAccent),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: _createChatWithImage,
-                          icon: const Icon(Icons.add_a_photo),
-                          color: Colors.white,
-                        ),
-                        IconButton(
-                          onPressed: _signOut,
-                          icon: const Icon(Icons.logout),
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
-              Expanded(
-                child: _buildQuestionList(),
+              Expanded(child: Container()),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.white),
+                title: const Text(
+                  'Log Out',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: _signOut,
               ),
             ],
           ),
@@ -295,11 +306,12 @@ class _HomePageState extends State<HomePage> {
           );
         }
 
-        return ListView(
+        return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          children: snapshot.data!.docs
-              .map<Widget>((doc) => _buildQuestionListItem(doc))
-              .toList(),
+          itemCount: snapshot.data!.docs.length,
+          itemBuilder: (context, index) {
+            return _buildQuestionListItem(snapshot.data!.docs[index]);
+          },
         );
       },
     );
@@ -353,6 +365,74 @@ class _HomePageState extends State<HomePage> {
               ),
               onPressed: () => _deleteQuestion(document.id),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: const Icon(Icons.person),
+                    color: Colors.white,
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Question List',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          IconButton(
+            onPressed: _createChatWithImage,
+            icon: const Icon(Icons.add_a_photo),
+            color: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: _buildDrawer(),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF141E30), Color(0xFF243B55)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildAppBar(),
+              Expanded(
+                child: _buildQuestionList(),
+              ),
+            ],
           ),
         ),
       ),
