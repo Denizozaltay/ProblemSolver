@@ -27,16 +27,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchUsername() async {
-    try {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-      final userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
-      setState(() {
-        _username = userDoc['username'];
-      });
-    } catch (e) {
-      // Handle errors if necessary
-    }
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    setState(() {
+      _username = userDoc['username'];
+    });
   }
 
   void _signOut() {
@@ -225,6 +221,34 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: _buildDrawer(),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF141E30), Color(0xFF243B55)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildAppBar(),
+              Expanded(
+                child: _buildQuestionList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDrawer() {
     return Drawer(
       child: Container(
@@ -407,34 +431,6 @@ class _HomePageState extends State<HomePage> {
             color: Colors.white,
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: _buildDrawer(),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF141E30), Color(0xFF243B55)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(),
-              Expanded(
-                child: _buildQuestionList(),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

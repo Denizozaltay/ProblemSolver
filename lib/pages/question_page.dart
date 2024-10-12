@@ -4,8 +4,12 @@ import 'package:problem_solver/services/question/question_service.dart';
 class QuestionPage extends StatefulWidget {
   final String questionId;
   final String title;
-  const QuestionPage(
-      {super.key, required this.questionId, required this.title});
+
+  const QuestionPage({
+    super.key,
+    required this.questionId,
+    required this.title,
+  });
 
   @override
   State<QuestionPage> createState() => _QuestionPageState();
@@ -13,6 +17,14 @@ class QuestionPage extends StatefulWidget {
 
 class _QuestionPageState extends State<QuestionPage> {
   final QuestionService _questionService = QuestionService();
+
+  Future<dynamic>? _questionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _questionFuture = _questionService.getQuestion(widget.questionId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,37 +42,8 @@ class _QuestionPageState extends State<QuestionPage> {
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Text(
-                        widget.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: _buildQuestionInfo(),
-              ),
+              _buildAppBar(),
+              Expanded(child: _buildBody()),
             ],
           ),
         ),
@@ -68,9 +51,83 @@ class _QuestionPageState extends State<QuestionPage> {
     );
   }
 
-  Widget _buildQuestionInfo() {
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Text(
+              widget.title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(dynamic data) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Question:",
+            style: TextStyle(
+              color: Colors.yellowAccent,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            data.question,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 30),
+          const Text(
+            "Answer:",
+            style: TextStyle(
+              color: Colors.greenAccent,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            data.answer,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
     return FutureBuilder(
-      future: _questionService.getQuestion(widget.questionId),
+      future: _questionFuture,
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -85,49 +142,15 @@ class _QuestionPageState extends State<QuestionPage> {
               style: TextStyle(color: Colors.white),
             ),
           );
-        } else {
-          return SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Question:",
-                  style: TextStyle(
-                    color: Colors.yellowAccent,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  snapshot.data.question,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                const Text(
-                  "Answer:",
-                  style: TextStyle(
-                    color: Colors.greenAccent,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  snapshot.data.answer,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
+        } else if (!snapshot.hasData) {
+          return const Center(
+            child: Text(
+              'No data found',
+              style: TextStyle(color: Colors.white),
             ),
           );
+        } else {
+          return _buildContent(snapshot.data);
         }
       },
     );
