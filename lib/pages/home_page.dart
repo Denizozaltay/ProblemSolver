@@ -40,22 +40,36 @@ class _HomePageState extends State<HomePage> {
     authService.signOut();
   }
 
-  void _showLoadingDialog() {
+  void _showLoadingDialog(String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const Center(child: CircularProgressIndicator());
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
 
   Future<void> _createChatWithImage() async {
-    _showLoadingDialog();
+    _showLoadingDialog('Detecting question...');
     try {
       final image = await ImagePicker().pickImage(source: ImageSource.camera);
       if (image == null) {
         if (mounted) {
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No image selected')),
           );
@@ -66,6 +80,7 @@ class _HomePageState extends State<HomePage> {
       final question = await openAIService.getPromptFromImageFile(image);
       if (question == null) {
         if (mounted) {
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Failed to generate question from image')),
@@ -77,6 +92,7 @@ class _HomePageState extends State<HomePage> {
       final title = await openAIService.getTitleFromImageFile(image);
       if (title == null) {
         if (mounted) {
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Failed to generate title from image')),
@@ -85,9 +101,15 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+        _showLoadingDialog('Solving question...');
+      }
+
       final answer = await openAIService.getQuestionAnswer(question);
       if (answer == null) {
         if (mounted) {
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Failed to get answer for the question')),
@@ -100,6 +122,7 @@ class _HomePageState extends State<HomePage> {
           await questionService.createQuestions(title, question, answer);
       if (questionId == null) {
         if (mounted) {
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to create question ID')),
           );
@@ -108,6 +131,7 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       if (mounted) {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('An error occurred: $e')),
         );
