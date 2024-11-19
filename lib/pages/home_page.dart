@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:problem_solver/pages/question_page.dart';
 import 'package:problem_solver/services/auth/auth_service.dart';
+import 'package:problem_solver/services/openai/openai_service.dart';
 import 'package:problem_solver/services/openrouter/openrouter_service.dart';
 import 'package:problem_solver/services/question/question_service.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final OpenAIService openAIService = OpenAIService();
   final OpenRouterService openRouterService = OpenRouterService();
   final QuestionService questionService = QuestionService();
   String? _username;
@@ -77,7 +79,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final question = await openRouterService.getPromptFromImageFile(image);
+      final question = await openAIService.getPromptFromImageFile(image);
       if (question == null) {
         if (mounted) {
           Navigator.pop(context);
@@ -89,7 +91,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final title = await openRouterService.getTitleFromImageFile(image);
+      final title = await openAIService.getTitleFromImageFile(image);
       if (title == null) {
         if (mounted) {
           Navigator.pop(context);
@@ -106,7 +108,7 @@ class _HomePageState extends State<HomePage> {
         _showLoadingDialog('Solving question...');
       }
 
-      final answer = await openRouterService.getQuestionAnswer(question);
+      final answer = await openAIService.getQuestionAnswer(question);
       if (answer == null) {
         if (mounted) {
           Navigator.pop(context);
