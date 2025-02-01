@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -53,10 +52,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               const CircularProgressIndicator(),
               const SizedBox(height: 16),
-              Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
+              Text(message, style: const TextStyle(color: Colors.white)),
             ],
           ),
         );
@@ -65,77 +61,112 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _createChatWithImage() async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF141E30), Color(0xFF243B55)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Colors.white),
+                  title: const Text('Take Photo',
+                      style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: Colors.white),
+                  title: const Text('Choose from Gallery',
+                      style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.of(context).pop(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cancel, color: Colors.white),
+                  title: const Text('Cancel',
+                      style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (source == null) return;
     _showLoadingDialog('Detecting question...');
     try {
-      final image = await ImagePicker().pickImage(source: ImageSource.camera);
+      final image = await ImagePicker().pickImage(source: source);
       if (image == null) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No image selected')),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('No image selected')));
         }
         return;
       }
-
       final question = await problemSolverService.getPromptFromImageFile(image);
       if (question == null) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Failed to generate question from image')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Failed to generate question from image')));
         }
         return;
       }
-
       final title = await problemSolverService.getTitleFromImageFile(image);
       if (title == null) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Failed to generate title from image')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Failed to generate title from image')));
         }
         return;
       }
-
       if (mounted && Navigator.canPop(context)) {
         Navigator.pop(context);
         _showLoadingDialog('Solving question...');
       }
-
       final answer = await problemSolverService.getQuestionAnswer(question);
       if (answer == null) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Failed to get answer for the question')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Failed to get answer for the question')));
         }
         return;
       }
-
       final questionId =
           await questionService.createQuestions(title, question, answer);
       if (questionId == null) {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create question ID')),
-          );
+              const SnackBar(content: Text('Failed to create question ID')));
         }
         return;
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('An error occurred: $e')));
       }
     } finally {
       if (mounted && Navigator.canPop(context)) {
@@ -160,23 +191,15 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Delete Question',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('Delete Question',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                const Text(
-                  'Are you sure you want to delete this question?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 18,
-                  ),
-                ),
+                const Text('Are you sure you want to delete this question?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.black87, fontSize: 18)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -188,13 +211,10 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24.0, vertical: 12.0),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                            borderRadius: BorderRadius.circular(30)),
                       ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.black, fontSize: 16),
-                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.black, fontSize: 16)),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(true),
@@ -203,13 +223,10 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24.0, vertical: 12.0),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                            borderRadius: BorderRadius.circular(30)),
                       ),
-                      child: const Text(
-                        'Delete',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
+                      child: const Text('Delete',
+                          style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
                   ],
                 ),
@@ -223,25 +240,18 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _deleteQuestion(String questionId) async {
     bool? confirm = await _showDeleteConfirmationDialog();
-
     if (confirm == true) {
       try {
         await questionService.deleteQuestion(questionId);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Question deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+            backgroundColor: Colors.green));
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Failed to delete question: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+            backgroundColor: Colors.redAccent));
       }
     }
   }
@@ -264,9 +274,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             children: [
               _buildAppBar(),
-              Expanded(
-                child: _buildQuestionList(),
-              ),
+              Expanded(child: _buildQuestionList()),
             ],
           ),
         ),
@@ -289,26 +297,20 @@ class _HomePageState extends State<HomePage> {
             children: [
               ListTile(
                 title: _username != null
-                    ? Text(
-                        _username!,
+                    ? Text(_username!,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold))
                     : const CircularProgressIndicator(
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.yellowAccent),
-                      ),
+                            AlwaysStoppedAnimation<Color>(Colors.yellowAccent)),
               ),
               Expanded(child: Container()),
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.white),
-                title: const Text(
-                  'Log Out',
-                  style: TextStyle(color: Colors.white),
-                ),
+                title: const Text('Log Out',
+                    style: TextStyle(color: Colors.white)),
                 onTap: _signOut,
               ),
             ],
@@ -320,7 +322,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildQuestionList() {
     final String userID = FirebaseAuth.instance.currentUser!.uid;
-
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -331,30 +332,20 @@ class _HomePageState extends State<HomePage> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Center(
-            child: Text(
-              "An error occurred",
-              style: TextStyle(color: Colors.white),
-            ),
-          );
+              child: Text("An error occurred",
+                  style: TextStyle(color: Colors.white)));
         }
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.yellowAccent),
-            ),
-          );
+              child: CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.yellowAccent)));
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(
-            child: Text(
-              "No questions found",
-              style: TextStyle(color: Colors.white70),
-            ),
-          );
+              child: Text("No questions found",
+                  style: TextStyle(color: Colors.white70)));
         }
-
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           itemCount: snapshot.data!.docs.length,
@@ -369,16 +360,13 @@ class _HomePageState extends State<HomePage> {
   Widget _buildQuestionListItem(DocumentSnapshot document) {
     Timestamp timestamp = document['timestamp'] as Timestamp;
     DateTime dateTime = timestamp.toDate();
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => QuestionPage(
-              questionId: document.id,
-              title: document['title'],
-            ),
+            builder: (context) =>
+                QuestionPage(questionId: document.id, title: document['title']),
           ),
         );
       },
@@ -386,32 +374,20 @@ class _HomePageState extends State<HomePage> {
         margin: const EdgeInsets.symmetric(vertical: 8.0),
         child: Card(
           color: Colors.white.withOpacity(0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           elevation: 5,
           child: ListTile(
             contentPadding: const EdgeInsets.all(16.0),
-            title: Text(
-              document['title'],
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Text(
-              "${dateTime.day}/${dateTime.month}/${dateTime.year}",
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
-            ),
+            title: Text(document['title'],
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold)),
+            subtitle: Text("${dateTime.day}/${dateTime.month}/${dateTime.year}",
+                style: const TextStyle(color: Colors.white70, fontSize: 14)),
             trailing: IconButton(
-              icon: const Icon(
-                Icons.delete,
-                color: Colors.redAccent,
-              ),
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
               onPressed: () => _deleteQuestion(document.id),
             ),
           ),
@@ -440,14 +416,11 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               const SizedBox(width: 8),
-              const Text(
-                'Question List',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('Question List',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           IconButton(
