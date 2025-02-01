@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:problem_solver/services/question/question_service.dart';
+import 'package:problem_solver/services/question_service.dart';
 
 class QuestionPage extends StatefulWidget {
   final String questionId;

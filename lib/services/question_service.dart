@@ -27,7 +27,7 @@ class QuestionService {
 
       return docRef.id;
     } catch (e) {
-      print('Soru oluşturulurken hata oluştu: $e');
+      print('Error creating question: $e');
       return null;
     }
   }
